@@ -1,0 +1,153 @@
+import collections as cc
+import operator
+
+
+class TrieNode:
+     
+    def __init__(self,value):
+        self.value = value
+        self.children = []
+        self.isEndOfWord = False
+        self.count = 0
+
+
+class fpTree:
+    def __init__(self):
+        self.root = self.getNode("")
+
+    def getNode(self,value):
+        return TrieNode(value)
+    
+    def insert(self,arr):
+        pCrawl = self.root
+        for level in range(len(arr)):
+            flag = False
+            index = 0
+
+            for i in range(len(pCrawl.children)):
+                if pCrawl.children[i].value == arr[level]:
+                    flag = True
+                    index = i
+                    break
+            if flag == False:
+                index = len(pCrawl.children)
+                pCrawl.children.append(self.getNode(arr[level]))
+            pCrawl = pCrawl.children[index]
+            pCrawl.count += 1
+            
+        pCrawl.isEndOfWord = True
+        
+    def DFSUtil(self, v, visited, temp, value):
+
+        visited.add(v)
+        #print(v.value, v.count)
+        for neighbour in v.children:
+            if neighbour not in visited:
+                if neighbour.value == value:
+                    path[value].append(list(temp)+[neighbour.count])
+                    
+                temp.append(neighbour.value)
+                self.DFSUtil(neighbour, visited, temp, value)
+                temp.pop()
+
+
+    def DFS(self, value):
+        
+        #print(value)
+        visited = set()
+
+        v = self.root
+        self.DFSUtil(v, visited, [], value)
+        
+        
+def sortList(arr):
+    for i in range(len(arr)):
+        for j in range(len(arr)-i-1):
+            if freq[arr[j]] < freq[arr[j+1]]:
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+                
+    return arr
+        
+    
+    
+data = {100:["f", "a", "c", "d", "g", "i", "m", "p"],
+        200:["a", "b", "c", "f", "l","m", "o"],
+        300:["b", "f", "h", "j", "o", "w"],
+        400:["b", "c", "k", "s", "p"],
+        500:["a", "f", "c", "e", "l", "p", "m", "n"]}
+
+min_support = 3
+freq = cc.defaultdict(int)
+for i in data:
+    for j in data[i]:
+        freq[j] += 1
+        
+sorted_freq = dict(sorted(  dict(sorted(freq.items(),
+                                        key = operator.itemgetter(0))).items(),
+                            key=operator.itemgetter(1),
+                            reverse=True))
+
+fp = fpTree()
+
+for i in data:
+    data[i].sort()
+    data[i] = sortList(data[i])
+    print(i,data[i])
+    fp.insert(data[i])
+    
+path = cc.defaultdict(list)
+print("***Path***")
+for i in freq:
+    fp.DFS(i)
+    
+for i in path:
+    for j in path[i]:
+        if len(j) <= 1:
+            path[i].pop()
+for i in path:
+    print(i,path[i])
+ans = cc.defaultdict(list)
+for key in path:
+    i = 0
+    while(i < len(path[key])):
+        temp = cc.defaultdict(int)
+        flag = True
+        for j in range(i,len(path[key])):
+            if path[key][j][0] == path[key][i][0]:
+                for k in range(len(path[key][j])-1):
+                    temp[path[key][j][k]] += path[key][j][-1]
+            else:
+                i = j
+                flag = False
+                break
+        ans[key].append(temp)
+        if flag:
+            break
+
+result = cc.defaultdict(list)
+for i in path:
+    result[i] = []
+    for j in range(len(ans[i])):
+        result[i].append({})
+        for k in ans[i][j]:
+            if ans[i][j][k] >= min_support:
+                result[i][j][k] = ans[i][j][k]
+print("***Before Sigma***")
+for i in ans:
+    print(i)
+    for j in ans[i]:
+        print(j)
+print("***After sigma***")
+for i in result:
+    print(i)
+    for j in result[i]:
+        print(j)
+print("***Result***")                
+for i in result:
+    for j in range(len(result[i])):
+        if len(list(result[i][j].values())) > 0:
+            print(i)
+            support = min(list(result[i][j].values()))
+            temp = list(result[i][j].keys())+[i]
+            print(temp,support)
+            
